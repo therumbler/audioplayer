@@ -9,47 +9,48 @@ import uuid
 
 class Track():
 	def __init__(self, **params):
+		#initialize the pygame stuff
 		pygame.mixer.init()
-		self.buffer = None
-		self.init_soundcloud()
-		if "url" in params:
-			self.load_track(url = params["url"])
 
-	def init_soundcloud(self):
+		#the soundcloud_client_id comes from the config.py file
 		self.soundcloud = Soundcloud(client_id = soundcloud_client_id, client_secret = "")
-	
 
-	def load_track(self, url):		
+		#for testing (see main() below) we'll be in the lib directory
+		#change to parent directory for working with 
+		#relative file paths (the etc/ directory)
 		if "lib" in os.getcwd():
 			os.chdir("..")
 
-		if "soundcloud" in url:
+		if "url" in params:
+			self.load_track(url = params["url"])
+		self.is_playing = False
+
+	def load_track(self, url):
+
+		if "soundcloud.com" in url:
+			#must be a soundcloud.com url
 			self.audio_url = self.soundcloud.get_mp3_url(url = url)
 			#print self.audio_url
 			self.filename = "etc/audio/%s.mp3" % str(uuid.uuid4())
 			print "filename = %s" % self.filename
-			#download track
+			
+			#download track to disk
 			response = urllib2.urlopen(self.audio_url)
 			with open("etc/audio/%s" % self.filename, "wb") as f:
 				f.write(response.read())
 
 		if ".mp3" in url:
+			#it must be a filename
 			filename = "etc/audio/%s" % url
 			self.filename = filename
-
-	def get_buffer(self, filename):
-		if "etc" not in filename:
-			filename = "etc/audio/%s" % filename
-
-		with open(filename) as f:
-			self.buffer = filename
 	
 	def start(self):
-		pygame.mixer.music.load(self.filename)
-		pygame.mixer.music.play()
-	
-
-
+		#load some music
+		if not self.is_playing:
+			pygame.mixer.music.load(self.filename)
+			
+			pygame.mixer.music.play()
+			self.is_playing = True
 def main():
 	#Test code
 	track = Track()
